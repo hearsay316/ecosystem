@@ -14,9 +14,13 @@ tracing-subscriber = { version = "0.3.18", features = ["env-filter",
     "time",
     "local-time"] }
 time = { version = "0.3.7", features = ["macros"] }
+opentelemetry-otlp = { version = "0.25.0", features = ["tonic"] }
+opentelemetry = "0.25.0"
+opentelemetry_sdk = { version = "0.25.0", features = ["rt-tokio"] }
+tracing-opentelemetry = "0.26.0"
 
 [dev-dependencies]
 serde = { version = "1.0.210", features = ["derive"] }
 serde_json = "1.0.128"
 axum = { version = "0.7.6", features = ["query", "tracing"] }
-tokio = { version = "1.40.0", features = ["rt", "rt-multi-thread", "macros"] }
+tokio = { version = "1.38.1", features = ["rt", "rt-multi-thread", "macros"] }
