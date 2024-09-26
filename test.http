@@ -2,3 +2,14 @@
 GET http://localhost:9000/
 
 ###
+PATCH http://localhost:9000/
+Content-Type: application/json
+
+{
+  "age": 10,
+  "skills": [
+    "RUST"
+  ]
+}
+
+###
