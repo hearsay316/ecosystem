@@ -20,6 +20,8 @@ opentelemetry_sdk = { version = "0.25.0", features = ["rt-tokio"] }
 tracing-opentelemetry = "0.26.0"
 derive_builder = "0.20.1"
 chrono = { version = "0.4.38", features = ["serde"] }
+serde_json = "1.0.128"
+serde = { version = "1.0.210", features = ["derive"] }
 
 [dev-dependencies]
 serde = { version = "1.0.210", features = ["derive"] }
@@ -28,3 +30,4 @@ axum = { version = "0.7.6", features = ["query", "tracing"] }
 tokio = { version = "1.38.1", features = ["rt", "rt-multi-thread", "macros"] }
 derive_builder = "0.20.1"
 derive_more = { version = "1.0.0", features = ["add","from","display","into"] }
+strum = { version = "0.26.3", features = ["derive"] }
