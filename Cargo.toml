@@ -27,3 +27,4 @@ serde_json = "1.0.128"
 axum = { version = "0.7.6", features = ["query", "tracing"] }
 tokio = { version = "1.38.1", features = ["rt", "rt-multi-thread", "macros"] }
 derive_builder = "0.20.1"
+derive_more = { version = "1.0.0", features = ["add","from","display","into"] }
