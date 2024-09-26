@@ -1,12 +1,15 @@
 
 use std::time::Duration;
+use axum::extract::Request;
 use axum::Router;
 use axum::routing::get;
+use opentelemetry::KeyValue;
 use opentelemetry::trace::TracerProvider;
 use opentelemetry_otlp::WithExportConfig;
-use opentelemetry_sdk::runtime;
-use opentelemetry_sdk::trace::{Tracer, TracerProvider};
+use opentelemetry_sdk::{runtime, Resource};
+use opentelemetry_sdk::trace::{Config, RandomIdGenerator, TracerProvider as OtherTracerProvider};
 use time::macros::format_description;
+use tokio::join;
 use tokio::net::TcpListener;
 use tokio::time::{sleep, Instant};
 use tracing::{info, level_filters::LevelFilter, instrument, warn, debug};
@@ -42,7 +45,7 @@ async fn main() -> anyhow::Result<()> {
         .with_filter(LevelFilter::INFO);
 
      let tracer = init_tracer()?;
-    let opentelemetry =tracing_opentelemetry::layer().with_tracer(tracer.tracer()) ;
+    let opentelemetry =tracing_opentelemetry::layer().with_tracer(tracer.tracer("default1")) ;
     tracing_subscriber::registry().with(console).with(file).with(opentelemetry).init();
     let addr = "0.0.0.0:9000";
     let app = Router::new().route(
@@ -58,12 +61,16 @@ async fn main() -> anyhow::Result<()> {
     */
     Ok(())
 }
-#[instrument]
-async fn index_handler() -> &'static str {
+#[instrument(fields(http.uri = req.uri().path(),http.method = req.method().as_str()))]
+async fn index_handler(req:Request) -> &'static str {
     debug!(" index handler started");
     sleep(Duration::from_millis(10)).await;
-    let ret = long_task().await;
-    info!(http.status = 200,"index handler Request completed");
+    // let ret = long_task().await;
+    // task1().await;
+    // task2().await;
+    // task3().await;
+    let (ret,_,_,_) =  join!(long_task(),task1(),task2(),task3());
+    info!(http.status_code = 200,"index handler Request completed");
     ret
 }
 #[instrument]
@@ -75,15 +82,38 @@ async fn long_task() -> &'static str {
     warn!(app.task_duration=elapsed,"task long  too long");
     "hello world"
 }
-fn init_tracer()->anyhow::Result<TracerProvider>{
+#[instrument]
+async fn task1(){
+    sleep(Duration::from_millis(100)).await;
+}
+#[instrument]
+async fn task2(){
+    sleep(Duration::from_millis(100)).await;
+}
+#[instrument]
+async fn task3(){
+    sleep(Duration::from_millis(100)).await;
+}
+fn init_tracer()->anyhow::Result<OtherTracerProvider>{
     let tracer =
     opentelemetry_otlp::new_pipeline()
         .tracing()
         .with_exporter(
             opentelemetry_otlp::new_exporter()
                 .tonic()
-                .with_endpoint("http://locahost:4317")
-        ).install_batch(runtime::Tokio)?;
+                .with_endpoint("http://localhost:4317")
+        )
+        .with_trace_config(
+            Config::default()
+                .with_id_generator(RandomIdGenerator::default())
+                .with_max_events_per_span(32)
+                .with_max_attributes_per_span(64)
+                .with_resource(Resource::new(vec![KeyValue::new(
+                "service.name",
+                "axum-tracing",
+            )])
+        ))
+        .install_batch(runtime::Tokio)?;
 
     Ok(tracer)
 }
