@@ -1,9 +1,12 @@
+use base64::engine::general_purpose::URL_SAFE_NO_PAD;
+use base64::Engine;
+use chacha20poly1305::{
+    aead::{Aead, OsRng},
+    AeadCore, ChaCha20Poly1305, KeyInit,
+};
 use std::fmt;
 use std::fmt::Formatter;
 use std::str::FromStr;
-use base64::Engine;
-use base64::engine::general_purpose::URL_SAFE_NO_PAD;
-use chacha20poly1305::{AeadCore, KeyInit, aead::{Aead, OsRng}, ChaCha20Poly1305};
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -26,7 +29,7 @@ struct User {
     // #[serde(serialize_with = "serialize_encrypt", deserialize_with = "deserialize_decrypt")]
     #[serde_as(as = "DisplayFromStr")]
     sensitive: SensitiveData,
-    #[serde_as(as="Vec<DisplayFromStr>")]
+    #[serde_as(as = "Vec<DisplayFromStr>")]
     url: Vec<http::Uri>,
 }
 #[derive(Debug, PartialEq)]
@@ -49,7 +52,7 @@ fn main() -> anyhow::Result<()> {
         date_of_birth: Utc::now(),
         skills: vec!["Rust".to_string(), "Python".to_string()],
         state: state1,
-        data: vec![1, 2, 3, 4, ],
+        data: vec![1, 2, 3, 4],
         sensitive: SensitiveData::new("secret"),
         url: vec!["http://example.com/a".parse()?],
     };
@@ -65,7 +68,6 @@ fn main() -> anyhow::Result<()> {
     //     dob: Utc::now(),
     //     skills: vec!["Rust".to_string(), "javascript".to_string()],
     // };
-
 
     Ok(())
 }
@@ -83,7 +85,8 @@ where
 {
     println!("555");
     let encoded = String::deserialize(deserializer)?;
-    let decode = URL_SAFE_NO_PAD.decode(encoded.as_bytes())
+    let decode = URL_SAFE_NO_PAD
+        .decode(encoded.as_bytes())
         .map_err(serde::de::Error::custom)?;
     Ok(decode)
 }
@@ -136,8 +139,8 @@ impl FromStr for SensitiveData {
         Ok(Self(decrpted))
     }
 }
-impl SensitiveData{
-    fn new(s:impl Into<String>)->Self{
+impl SensitiveData {
+    fn new(s: impl Into<String>) -> Self {
         Self(s.into())
     }
 }

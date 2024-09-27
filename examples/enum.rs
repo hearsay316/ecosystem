@@ -1,38 +1,39 @@
-use std::ops::Deref;
 use anyhow::Result;
 use serde::Serialize;
-use strum::{Display, EnumCount, EnumDiscriminants, EnumIs, EnumIter, EnumString, IntoEnumIterator, IntoStaticStr, VariantArray, VariantNames};
-use crate::Color::Yellow;
+use strum::{
+    Display, EnumCount, EnumDiscriminants, EnumIs, EnumIter, EnumString, IntoEnumIterator,
+    IntoStaticStr, VariantNames,
+};
 
 #[allow(unused)]
-#[derive(Display, Debug,Serialize)]
+#[derive(Display, Debug, Serialize)]
 enum Color {
-    #[strum(serialize = "redred",to_string="red")]
+    #[strum(serialize = "redred", to_string = "red")]
     Red,
     Green {
-        range: usize
+        range: usize,
     },
     Blue(usize),
     Yellow,
     #[strum(to_string = "purple with {sat} saturation")]
     Purple {
-        sat: usize
-    }
+        sat: usize,
+    },
 }
 
-
 #[allow(unused)]
-#[derive(Debug, EnumString, EnumCount, EnumDiscriminants,
-    EnumIter, EnumIs, IntoStaticStr, VariantNames)]
+#[derive(
+    Debug, EnumString, EnumCount, EnumDiscriminants, EnumIter, EnumIs, IntoStaticStr, VariantNames,
+)]
 enum MyEnum {
     A,
     B(String),
     C,
-    D
+    D,
 }
 fn main() -> Result<()> {
     MyEnum::VARIANTS.iter().for_each(|v| println!("{:?}", v));
-println!("total:{:?}",MyEnum::COUNT);
+    println!("total:{:?}", MyEnum::COUNT);
     MyEnum::iter().for_each(|v| println!("{:?}", v));
     let my_enum = MyEnum::B("hello".to_owned());
     println!("{:?}", my_enum.is_c());
@@ -47,6 +48,6 @@ println!("total:{:?}",MyEnum::COUNT);
     println!("{} ,{} ,{} ,{} <{}>", red, green, blue, yellow, purple);
 
     let serde_str_red = serde_json::to_string(&red)?;
-    println!("{:?}",serde_str_red);
+    println!("{:?}", serde_str_red);
     Ok(())
 }
