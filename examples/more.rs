@@ -2,7 +2,7 @@ use derive_more::{Add, Display, From, Into};
 
 #[derive(PartialEq, Copy, Clone, From, Add, Into, Display)]
 struct MyInt(i32);
-
+#[allow(dead_code)]
 #[derive(PartialEq)]
 struct Point2D {
     x: i32,

@@ -63,7 +63,7 @@ async fn main() -> anyhow::Result<()> {
     */
     Ok(())
 }
-#[instrument(fields(http.uri = req.uri().path(),http.method = req.method().as_str()))]
+#[instrument(fields(http.uri = _req.uri().path(),http.method = _req.method().as_str()))]
 async fn index_handler(_req: Request) -> &'static str {
     debug!(" index handler started");
     sleep(Duration::from_millis(10)).await;

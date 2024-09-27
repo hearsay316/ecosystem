@@ -2,9 +2,9 @@ use anyhow::{Context, Error};
 use std::fs;
 use std::num::ParseIntError;
 use thiserror::Error;
-
+#[allow(dead_code)]
 #[derive(Error, Debug)]
-pub enum MyError {
+pub(crate) enum MyError {
     #[error("I/O error: {0}")]
     Io(#[from] std::io::Error),
     #[error("Parse error:{0}")]
