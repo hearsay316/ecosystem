@@ -15,6 +15,6 @@ fn main() -> anyhow::Result<()> {
     let c = b.split_to(12);
     println!("{:?}",b);
     println!("{:?}",c);
-    println!("{:?}",buf);
+    println!("{:?} ",buf);
     Ok(())
 }
