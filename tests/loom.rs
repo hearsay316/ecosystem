@@ -1,4 +1,5 @@
 use loom::sync::atomic::AtomicUsize;
+#[allow(unused_imports)]
 use loom::sync::atomic::Ordering::{Acquire, Relaxed, Release};
 use loom::sync::Arc;
 use loom::thread;
