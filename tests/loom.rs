@@ -14,10 +14,10 @@ fn buggy_concurrent_inc() {
                 let num = num.clone();
                 thread::spawn(move || {
                     let curr = num.load(Acquire);
-                    println!("{}",curr);
+                    println!("{}", curr);
                     // 这个是一个bug
                     // num.
-                        // fetch_add( 1, Release);
+                    // fetch_add( 1, Release);
                 })
             })
             .collect();
