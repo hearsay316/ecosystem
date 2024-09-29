@@ -13,3 +13,17 @@ Content-Type: application/json
 }
 
 ###
+
+
+POST localhost:9876
+Content-Type: application/json
+
+{
+  "url": "https://baidu.com/"
+}
+
+###
+GET  http://localhost:9876/yxM4tT
+
+###
+GET  http://localhost:9876/8zLn31
