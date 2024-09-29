@@ -28,6 +28,7 @@ serde_with = "3.9.0"
 bytes = "1.7.2"
 
 [dev-dependencies]
+
 serde = { version = "1.0.210", features = ["derive"] }
 serde_json = "1.0.128"
 axum = { version = "0.7.6", features = ["query", "tracing"] }
@@ -36,4 +37,10 @@ derive_builder = "0.20.1"
 derive_more = { version = "1.0.0", features = ["add","from","display","into"] }
 strum = { version = "0.26.3", features = ["derive"] }
 http = "1.1.0"
+loom = "0.7.1"
 blake3 = "1.5.4"
+dashmap = "6.1.0"
+tokio-stream = "0.1.16"
+tokio-util = { version = "0.7.12", features = ["codec"] }
+futures = "0.3.30"
+console-subscriber = "0.4.0"
