@@ -1,12 +1,17 @@
+#![allow(unused_unsafe)]
+
 use axum::extract::{Path, State};
-use axum::response::IntoResponse;
+use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post};
 use axum::{Json, Router};
+use futures::future::BoxFuture;
+use futures::FutureExt;
 use http::header::LOCATION;
 use http::{HeaderMap, StatusCode};
 use nanoid::nanoid;
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, PgPool};
+use thiserror::Error;
 use tokio::net::TcpListener;
 use tracing::info;
 use tracing::level_filters::LevelFilter;
@@ -14,7 +19,9 @@ use tracing_subscriber::fmt::Layer;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
 use tracing_subscriber::Layer as _;
+
 const LISTEN_ADDR: &str = "localhost:9876";
+static mut A: i32 = 0;
 #[derive(Debug, Deserialize)]
 struct ShortenReq {
     url: String,
@@ -36,9 +43,38 @@ struct UrlRecord {
     #[sqlx(default)]
     url: String,
 }
+impl UrlRecord {
+    fn try_new() -> Self {
+        Self {
+            id: "-1".to_string(),
+            url: "-1".to_string(),
+        }
+    }
+}
+
+#[allow(dead_code)]
+#[derive(Error, Debug)]
+pub(crate) enum MyError {
+    #[error("Custom error :{0}")]
+    Custom(String),
+    #[error("Not Found")]
+    NotFound,
+}
+
+impl IntoResponse for MyError {
+    fn into_response(self) -> Response {
+        match self {
+            MyError::NotFound => (StatusCode::NOT_FOUND, self.to_string()).into_response(),
+            MyError::Custom(message) => (StatusCode::BAD_REQUEST, message).into_response(),
+            // 根据需要处理其他错误类型
+        }
+    }
+}
 impl AppState {
     async fn try_new(url: &str) -> anyhow::Result<Self> {
-        let pool = PgPool::connect(url).await?;
+        let pool = PgPool::connect(url)
+            .await
+            .map_err(|e| MyError::Custom(e.to_string()))?;
         //创建 db
         sqlx::query(
             r#"
@@ -50,18 +86,33 @@ impl AppState {
         )
         .execute(&pool)
         .await
-        .expect("这个是个错误");
+        .map_err(|e| MyError::Custom(e.to_string()))?;
         Ok(Self { db: pool })
     }
-    async fn shorten(&self, url: &str) -> anyhow::Result<String> {
-        let id = nanoid!(6);
-        let ids:UrlRecord =   sqlx::query_as("INSERT INTO urls (id, url) VALUES ($1, $2) ON CONFLICT(url) DO UPDATE SET url=EXCLUDED.url RETURNING id")
-            .bind(&id)
-            .bind(url)
-            .fetch_one(&self.db)
-            .await?;
-        info!("{:?}", ids);
-        Ok(ids.id)
+    fn shorten<'a>(&'a self, url: &'a str) -> BoxFuture<anyhow::Result<String>> {
+        async move {
+
+            unsafe {
+                let mut  id = "8zLn31".to_string();
+                if A != 0{
+                    id = nanoid!(6);
+                }
+                let mut ids:UrlRecord =   sqlx::query_as("INSERT INTO urls (id, url) VALUES ($1, $2) ON CONFLICT(url) DO UPDATE SET url=EXCLUDED.url RETURNING id")
+                    .bind(&id)
+                    .bind(url)
+                    .fetch_one(&self.db)
+                    .await.unwrap_or(UrlRecord::try_new());
+                info!("{:?} ---A", ids);
+                if ids.id== *"-1"{
+                    unsafe { A += 1; }
+                    ids = UrlRecord{
+                        id:  self.shorten(url).await?,
+                        url:"".to_string()
+                    }
+                }
+                Ok(ids.id)
+            }
+        }.boxed()
     }
     async fn get_url(&self, id: &str) -> anyhow::Result<String> {
         let record: UrlRecord = sqlx::query_as("SELECT url FROM urls WHERE id = $1")
@@ -91,11 +142,11 @@ async fn main() -> anyhow::Result<()> {
 async fn shorten(
     State(state): State<AppState>,
     Json(data): Json<ShortenReq>,
-) -> anyhow::Result<impl IntoResponse, StatusCode> {
-    let id = state
+) -> anyhow::Result<impl IntoResponse, MyError> {
+    let id: String = state
         .shorten(&data.url)
         .await
-        .map_err(|_| StatusCode::UNPROCESSABLE_ENTITY)?;
+        .map_err(|_| MyError::NotFound)?;
     let body = Json(ShortenRes {
         url: format!("http://{}/{}", LISTEN_ADDR, id),
     });
