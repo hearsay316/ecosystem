@@ -1,7 +1,8 @@
 use axum::extract::{Path, State};
 use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post};
-use axum::{Json, Router};
+use axum::{debug_handler, Json, Router};
+
 use futures::future::BoxFuture;
 use futures::FutureExt;
 use http::header::LOCATION;
@@ -136,6 +137,8 @@ async fn main() -> anyhow::Result<()> {
     axum::serve(listener, app.into_make_service()).await?;
     Ok(()) //into_make_service
 }
+
+#[debug_handler]
 // body 需要在最后以后一个参数
 async fn shorten(
     State(state): State<AppState>,
