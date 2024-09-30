@@ -1,5 +1,3 @@
-#![allow(unused_unsafe)]
-
 use axum::extract::{Path, State};
 use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post};
@@ -104,7 +102,7 @@ impl AppState {
                     .await.unwrap_or(UrlRecord::try_new());
                 info!("{:?} ---A", ids);
                 if ids.id== *"-1"{
-                    unsafe { A += 1; }
+                     A += 1;
                     ids = UrlRecord{
                         id:  self.shorten(url).await?,
                         url:"".to_string()
