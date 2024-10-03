@@ -77,7 +77,7 @@ impl AppState {
         //创建 db
         sqlx::query(
             r#"
-            CREATE TABLE IF NOT EXISTS shortener (
+            CREATE TABLE IF NOT EXISTS urls (
             id CHAR(6) PRIMARY KEY,
             url TEXT NOT NULL UNIQUE
             )
@@ -95,15 +95,16 @@ impl AppState {
                 let mut  id = "8zLn31".to_string();
                 if A != 0{
                     id = nanoid!(6);
+                    info!("id {}",id)
                 }
                 let mut ids:UrlRecord =   sqlx::query_as("INSERT INTO urls (id, url) VALUES ($1, $2) ON CONFLICT(url) DO UPDATE SET url=EXCLUDED.url RETURNING id")
                     .bind(&id)
                     .bind(url)
                     .fetch_one(&self.db)
                     .await.unwrap_or(UrlRecord::try_new());
-                info!("{:?} ---A", ids);
+                info!("{:?} {} ---A", ids,A);
                 if ids.id== *"-1"{
-                     A += 1;
+                    A += 1;
                     ids = UrlRecord{
                         id:  self.shorten(url).await?,
                         url:"".to_string()
